@@ -9,7 +9,9 @@ export class RequestController {
   constructor(private readonly requestService: RequestService) {}
 
   @Get()
-  getAllActiveRequests() {}
+  getPendingRequest() {
+    return this.requestService.getPendingRequests();
+  }
 
   @Get(':id')
   getRequestByID() {}

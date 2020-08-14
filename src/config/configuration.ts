@@ -2,6 +2,11 @@ export default () => ({
   api: {
     version: '1',
   },
+  config: {
+    discord: {
+      clientID: '740854356592820254',
+    },
+  },
   url: {
     discord: {
       token: 'https://discord.com/api/oauth2/token',

@@ -1,5 +1,6 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { OAuthToken } from 'src/models/discord/token';
+
 import { AuthService } from './auth.service';
 
 @Controller('auth')

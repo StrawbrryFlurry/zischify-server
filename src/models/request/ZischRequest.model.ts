@@ -1,5 +1,5 @@
 export interface IZischRequest {
-  id: string;
+  // id: string;
   userid: string;
   comment: string;
   date: Date;

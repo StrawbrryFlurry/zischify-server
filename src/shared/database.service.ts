@@ -1,9 +1,8 @@
-import { Injectable, HttpService } from '@nestjs/common';
+import { HttpService, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { IDiscordUserProfile } from 'src/models/discord/DiscordUserProfile';
 import { firestore as db } from 'firebase-admin';
 import { from, Observable } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 
 @Injectable()
 export class DatabaseService {
@@ -12,40 +11,7 @@ export class DatabaseService {
     private readonly http: HttpService,
   ) {}
 
-  getUserAvatarURL({ id, avatar }: Partial<IDiscordUserProfile>) {
-    const avatarURL = this.config.get('url.discord.useravatar');
-    let fileType = 'webp';
-
-    if (avatar.startsWith('a_')) {
-      fileType = 'gif';
-    }
-
-    return `${avatarURL}/${id}/${avatar}.${fileType}?size=4096`;
-  }
-  setDatabaseUser(profile: IDiscordUserProfile) {
-    const avatarURL = this.getUserAvatarURL(profile);
-
-    return from(
-      db()
-        .collection('users')
-        .doc(profile.id)
-        .set(
-          {
-            id: profile.id,
-            username: profile.username,
-            email: profile.email,
-            dcAccessToken: profile.access_token,
-            dcRefreshToken: profile.refresh_token,
-            avatar: profile.avatar,
-            avatarURL: avatarURL,
-            verified: profile.verified,
-          },
-          { merge: true },
-        ),
-    ).pipe(map(() => profile));
-  }
-
-  setDocument<T extends {}>(path: string, value: T, merge = true) {
+  setDocument<T extends {}>(path: string, value: Partial<T>, merge = true) {
     return from(
       db()
         .doc(path)
@@ -53,8 +19,31 @@ export class DatabaseService {
     );
   }
 
+  createDocument<T extends {}>(path: string, value?: T) {
+    return from(
+      db()
+        .collection(path)
+        .doc()
+        .set(value),
+    );
+  }
+
   getDocumentData<T>(path: string): Observable<T> {
-    return this.getDocument<T>(path).pipe(switchMap(snap => snap.data));
+    return this.getDocument<T>(path).pipe(map(snap => snap.data() as T));
+  }
+
+  getDocumentDataFromCollection<T>(path: string) {
+    return this.getDocumentsFromCollection(path).pipe(
+      map(docs => docs.map(doc => doc.data() as T)),
+    );
+  }
+
+  getDocumentsFromCollection(path: string) {
+    return from(
+      db()
+        .collection(path)
+        .get(),
+    ).pipe(map(snap => snap.docs));
   }
 
   getDocument<T extends {}>(path: string): Observable<db.DocumentSnapshot<T>> {

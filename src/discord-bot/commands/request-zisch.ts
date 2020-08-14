@@ -1,5 +1,7 @@
 import { Message } from 'discord.js';
 import moment, { Moment } from 'moment';
+import { IZischRequest } from 'src/models/request/ZischRequest.model';
+import { firestore as db } from 'firebase-admin';
 
 export const requestZisch = async (message: Message, args: string) => {
   let requestDate;
@@ -46,6 +48,18 @@ const setupRequest = (message: Message, date: Moment) => {
   message.channel.send(
     `Aight, I'll set up a request for: ${date.format('MMMM Do YYYY, h:mm a')}`,
   );
+
+  let request: Partial<IZischRequest> = {
+    comment: message.content,
+    date: date.toDate(),
+    userid: message.author.id,
+    usersAccepted: [message.author.id],
+  };
+
+  db()
+    .collection('pending-requests')
+    .doc()
+    .set(request);
 };
 
 const parseTimestamp = (timestamp: string) => {

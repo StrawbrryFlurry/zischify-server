@@ -1,12 +1,10 @@
-import {
-  Injectable,
-  NestMiddleware,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { auth } from 'firebase-admin';
+import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common';
 import { Request } from 'express';
+import { auth } from 'firebase-admin';
 
-export type TAuthenticatedUserRequest = Request & { user: auth.DecodedIdToken };
+export type TAuthenticatedUserRequest = Request & {
+  user: auth.DecodedIdToken & { id: string };
+};
 
 @Injectable()
 export class TokenVerificationMiddleware implements NestMiddleware {
@@ -18,10 +16,18 @@ export class TokenVerificationMiddleware implements NestMiddleware {
     }
 
     const [, token] = authorization.split(' ');
-    const user = await auth().verifyIdToken(token, true);
+    let user: auth.DecodedIdToken;
+
+    try {
+      user = await auth().verifyIdToken(token, true);
+    } catch {
+      throw new UnauthorizedException('Authentication required');
+    }
 
     if (user) {
       req['user'] = user;
+      req['user']['id'] = user.uid;
+
       return next();
     }
 

@@ -5,5 +5,6 @@ export interface IUserProfile {
   dcAccessToken: string;
   dcRefreshToken: string;
   avatar: string;
+  avatarURL: string;
   verified: Boolean;
 }
